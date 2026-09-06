@@ -1,0 +1,90 @@
+[
+  {
+    "query": "How did the company’s infrastructure spending change recently?",
+    "documentId": "q3-infra",
+    "page": 17,
+    "kind": "paraphrase"
+  },
+  {
+    "query": "Why did retrieval workers stall when traffic surged in August?",
+    "documentId": "q3-infra",
+    "page": 9,
+    "kind": "paraphrase"
+  },
+  {
+    "query": "What should replace static cloud credentials for services?",
+    "documentId": "cloud-sec",
+    "page": 31,
+    "kind": "conceptual",
+    "altDocumentIds": ["zero-trust"]
+  },
+  {
+    "query": "How did the 2025 access policy change remote connectivity?",
+    "documentId": "policy-2025",
+    "page": 5,
+    "kind": "paraphrase"
+  },
+  {
+    "query": "What remote-access control was mandatory under the 2024 policy?",
+    "documentId": "policy-2024",
+    "page": 3,
+    "kind": "paraphrase"
+  },
+  {
+    "query": "Which idle compute was wasting money in staging?",
+    "documentId": "devops-cost",
+    "page": 8,
+    "kind": "paraphrase"
+  },
+  {
+    "query": "Why did search latency miss its budget after the index grew?",
+    "documentId": "reliability",
+    "page": 22,
+    "kind": "conceptual"
+  },
+  {
+    "query": "Where should the vector index live for low seek time?",
+    "documentId": "k8s-ops",
+    "page": 41,
+    "kind": "conceptual"
+  },
+  {
+    "query": "Are document collections just folders?",
+    "documentId": "zero-trust",
+    "page": 4,
+    "kind": "conceptual"
+  },
+  {
+    "query": "How quickly must search indexes be recoverable after a region loss?",
+    "documentId": "dr-plan",
+    "page": 11,
+    "kind": "paraphrase"
+  },
+  {
+    "query": "NVMe FAISS shards",
+    "documentId": "k8s-ops",
+    "page": 41,
+    "kind": "keyword",
+    "strictPage": true
+  },
+  {
+    "query": "reserved-instance coverage 61%",
+    "documentId": "q3-infra",
+    "page": 17,
+    "kind": "keyword",
+    "altDocumentIds": ["finops"]
+  },
+  {
+    "query": "What replaced corporate VPN in the later security policy?",
+    "documentId": "policy-2025",
+    "page": 5,
+    "kind": "cross-document",
+    "altDocumentIds": ["zero-trust"]
+  },
+  {
+    "query": "Who should be told before a public status page during a document-store incident?",
+    "documentId": "incident",
+    "page": 14,
+    "kind": "factual"
+  }
+]

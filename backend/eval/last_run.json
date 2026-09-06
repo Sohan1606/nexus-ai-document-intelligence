@@ -1,0 +1,15 @@
+{
+  "when": "2026-09-06T07:15:21+00:00",
+  "n_queries": 14,
+  "corpus_documents": 13,
+  "chunks": 28,
+  "embedding": "hash-ngram",
+  "embedding_dim": 384,
+  "retrieval": "hybrid (0.7 dense FAISS IP + 0.3 Jaccard) then lexical rerank",
+  "Recall@1": 0.286,
+  "Recall@3": 0.714,
+  "Recall@5": 0.929,
+  "HitRate@5": 0.929,
+  "MRR": 0.542,
+  "note": "Local prototype metrics on a tiny designed corpus. Not production SLOs. Hashing embeddings are lexical, not neural semantic."
+}

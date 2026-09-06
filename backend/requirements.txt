@@ -1,0 +1,13 @@
+# Python 3.11–3.13 (3.12 recommended). Default stack has no paid APIs.
+fastapi==0.141.1
+uvicorn==0.52.4
+pypdf==6.17.0
+numpy==2.3.5
+httpx==0.28.1
+pydantic==2.13.4
+python-multipart==0.0.32
+python-dotenv==1.1.0
+faiss-cpu==1.15.0
+pytest==9.0.3
+# Optional neural embeddings (local, not required):
+# sentence-transformers>=3.0

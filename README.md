@@ -1,161 +1,256 @@
 # NEXUS — AI Document Intelligence
 
-**Your documents. Finally searchable by thought.**
+> **Search beyond keywords. Understand everything.**
 
-NEXUS is a cinematic product film **and** a local-first document intelligence workspace. The frontend is an art-directed React prototype. The backend is a real RAG pipeline: PDF ingest, page-aware chunking, embeddings, persistent FAISS, hybrid retrieval, and optional Ollama (with an extractive fallback).
+NEXUS is a cinematic document-intelligence workspace backed by a **local-first RAG pipeline**. It combines an art-directed React experience with a FastAPI backend for document ingestion, page-aware chunking, configurable embeddings, persistent FAISS retrieval, hybrid search, reranking, grounded answers, and source-level citation inspection.
 
-**GitHub description:** NEXUS is a cinematic AI document intelligence platform combining React, FastAPI, FAISS, and local/open-source RAG with source-grounded citation inspection.
-
-Nothing here claims live paid inference, production latency, certifications, or customers.
-
-[mayooear/ai-pdf-chatbot-langchain](https://github.com/mayooear/ai-pdf-chatbot-langchain) is **conceptual inspiration**, not this repository.
+[**GitHub Repository**](https://github.com/Sohan1606/nexus-ai-document-intelligence)
 
 ---
 
-## Contents
+## Why NEXUS exists
 
-1. [What you get](#what-you-get)
-2. [Prerequisites (Windows)](#prerequisites-windows)
-3. [Run demo mode](#run-demo-mode)
-4. [Run local RAG](#run-local-rag)
-5. [Optional Ollama](#optional-ollama)
-6. [Smoke tests](#smoke-tests)
-7. [Environment variables](#environment-variables)
-8. [Embeddings (hash vs SBERT)](#embeddings-hash-vs-sbert)
-9. [Evaluation](#evaluation)
-10. [Docker (optional)](#docker-optional)
-11. [API](#api)
-12. [Troubleshooting](#troubleshooting)
-13. [Publish to GitHub](#publish-to-github)
-14. [Architecture](#architecture)
+Traditional document search asks users to remember the exact words they are looking for.
 
-All commands below are **PowerShell**. They assume the current directory is the `nexus` folder (the one that contains `package.json` and `backend\`). In VS Code: **File → Open Folder** on `nexus`, then **Terminal → New Terminal**.
+NEXUS is designed around a different interaction:
 
-Confirm:
+```text
+Question
+   ↓
+Retrieve evidence
+   ↓
+Rank evidence
+   ↓
+Build context
+   ↓
+Generate grounded answer
+   ↓
+Inspect the source
+```
+
+The product deliberately makes the **evidence trail** visible. An answer is not the end of the interaction; the user can follow a citation back to the supporting document, page, section, and passage.
+
+---
+
+## What is real vs. simulated
+
+| Capability | Status |
+| --- | --- |
+| Cinematic React product experience | **Real** |
+| FastAPI backend | **Real** |
+| PDF / Markdown / TXT ingestion | **Real** |
+| Page-aware chunking | **Real** |
+| FAISS vector index | **Real** |
+| Persistent local index | **Real** |
+| Hashing embeddings | **Real** |
+| Sentence-Transformers / MiniLM option | **Implemented, optional** |
+| Hybrid retrieval | **Real** |
+| Lexical reranking | **Real** |
+| Ollama local generation | **Real path; verify on the target machine** |
+| Extractive grounded fallback | **Real** |
+| Citation mapping | **Real** |
+| Frontend demo mode | **Real** |
+| Production-scale benchmark claims | **No** |
+
+The seeded evaluation is intentionally presented as a **small local prototype measurement**, not a production SLO or general statement about RAG quality.
+
+---
+
+## Product highlights
+
+### Cinematic interface
+
+A design-led React experience built as a product film rather than a conventional SaaS dashboard.
+
+### Intelligence workspace
+
+A three-column workspace for:
+
+- document discovery
+- search
+- assistant conversations
+- collections
+- saved answers
+- history
+- evidence inspection
+
+### Retrieval trace
+
+The interface exposes the retrieval story:
+
+```text
+Understand
+→ Search
+→ Retrieve
+→ Rerank
+→ Context
+→ Generate
+→ Cite
+```
+
+### Evidence inspector
+
+Every returned citation can be opened to inspect:
+
+- source document
+- page
+- section
+- retrieved passage
+- retrieval score
+- surrounding context
+
+### Document viewer
+
+Citation-to-source navigation keeps the answer grounded in an inspectable document location.
+
+### Cross-document workflows
+
+NEXUS includes a policy comparison experience and related-document exploration so the product feels like document intelligence rather than a basic chat wrapper.
+
+### Local-first architecture
+
+The project is designed to run without mandatory paid AI infrastructure. Demo mode requires no backend at all; local mode uses FastAPI, FAISS, and optionally Ollama.
+
+---
+
+## Architecture
+
+```mermaid
+graph TD
+    A[React + TypeScript] --> B[API facade]
+    B --> C[FastAPI]
+    C --> D[Document ingestion]
+    D --> E[Page-aware chunking]
+    E --> F[Embedding provider]
+    F --> G[FAISS]
+    G --> H[Retrieval]
+    H --> I[Lexical rerank]
+    I --> J[Context builder]
+    J --> K[Ollama / local generation]
+    K --> L[Citation mapping]
+    L --> A
+```
+
+### Two runtime modes
+
+```text
+DEMO MODE
+React → local demo corpus → in-browser simulation
+
+LOCAL RAG MODE
+React → FastAPI → ingestion / embeddings / FAISS / retrieval → Ollama or extractive fallback
+```
+
+### Core stack
+
+**Frontend**
+
+- React 19
+- TypeScript
+- Vite
+- Tailwind CSS
+- Framer Motion
+- Lenis
+- React Router
+- Lucide
+
+**Backend**
+
+- Python
+- FastAPI
+- Pydantic
+- pypdf
+- FAISS
+- python-dotenv
+- optional Sentence-Transformers
+- optional Ollama
+
+---
+
+## Run on Windows
+
+The commands below assume **PowerShell** and that VS Code is opened at the `nexus` project root.
+
+### 1. Confirm the project
 
 ```powershell
 Get-ChildItem package.json, backend\requirements.txt
 ```
 
----
+### 2. Demo mode
 
-## What you get
-
-| Mode | How | What it is |
-| --- | --- | --- |
-| **Demo retrieval** | `VITE_API_MODE=demo` (default) | In-browser simulation. Fuse.js is **only** used here. No Python required. |
-| **Local RAG** | `VITE_API_MODE=local` + FastAPI | Upload → extract → chunk → embed → FAISS → retrieve → rerank → generate → citations. |
-| **Local RAG + Ollama** | same, plus Ollama running | Same retrieval, answers generated by a local model. |
-
-If local mode is on and FastAPI is down, the UI **falls back to demo**. Ollama is never required. Docker is never required.
-
-Supported upload types: `.pdf`, `.md`, `.txt` (15 MB). Scanned image-only PDFs are rejected (no extractable text).
-
----
-
-## Prerequisites (Windows)
-
-Install these **once**. Then close and reopen VS Code so `PATH` updates.
-
-| Tool | Version | Where |
-| --- | --- | --- |
-| Windows | 10 or 11 | — |
-| VS Code | current | https://code.visualstudio.com |
-| Git | current | https://git-scm.com/download/win |
-| Python | **3.11, 3.12, or 3.13** (3.12 recommended) | https://www.python.org/downloads/ — tick **Add python.exe to PATH** |
-| Node.js | **20 LTS or newer** | https://nodejs.org (LTS) |
-| Ollama | optional | https://ollama.com/download |
-
-Check:
-
-```powershell
-py -3 --version
-node --version
-npm --version
-git --version
-```
-
-If `py` is not found, use `python` in place of `py -3` for the rest of this guide.
-
----
-
-## Run demo mode
-
-No backend. No Ollama. This is the default.
-
-**Terminal 1** (project root):
+No Python backend and no Ollama required.
 
 ```powershell
 npm install
 npm run dev
 ```
 
-Open http://127.0.0.1:5173
+Open:
 
-- `/` — product film
-- `/workspace` — application (demo retrieval)
+```text
+http://localhost:5173/
+http://localhost:5173/workspace
+```
 
-Stop with `Ctrl+C`.
+### 3. Local RAG mode
 
----
-
-## Run local RAG
-
-Two terminals. Ollama is **not** required; answers will be extractive readings of retrieved passages.
-
-### STEP 1 — Environment files (once)
-
-From the project root:
+From the project root, create the environment files once:
 
 ```powershell
 Copy-Item .env.example .env
 Copy-Item backend\.env.example backend\.env
 ```
 
-Edit the **root** `.env` so local mode is on. The file should contain:
+Set the root `.env` to:
 
-```
+```text
 VITE_API_MODE=local
 VITE_API_BASE_URL=
 ```
 
-Leave `VITE_API_BASE_URL` empty. Vite proxies `/api` and `/health` to `http://127.0.0.1:8000`.
-
-`backend\.env` can stay as copied. Hashing embeddings and extractive answers are the defaults.
-
-### STEP 2 — Backend venv (once per machine)
-
-**Terminal 1:**
+Then create the Python environment using the supported Python version on your machine. Python 3.13 is a good Windows choice for this project:
 
 ```powershell
-Set-Location backend
-py -3 -m venv .venv
-.\.venv\Scripts\Activate.ps1
+py -3.13 -m venv backend\.venv
+.\backend\.venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
+python -m pip install -r backend\requirements.txt
 ```
 
-If `Activate.ps1` is blocked, run **once** (CurrentUser only):
+If PowerShell blocks activation:
 
 ```powershell
 Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
 ```
 
-Then retry `.\.venv\Scripts\Activate.ps1`.
-
-Stay in `backend` with the venv active for backend commands.
-
-### STEP 3 — Start FastAPI
-
-Same terminal, still in `backend`, venv active:
+Start FastAPI from the `backend` directory:
 
 ```powershell
+Set-Location backend
 python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
 
-Leave this running. First start seeds 13 short markdown documents into `backend\data\`.
+Keep that terminal running.
 
-Check in a browser: http://127.0.0.1:8000/health
+Open a second VS Code terminal at the project root:
+
+```powershell
+npm install
+npm run dev
+```
+
+Then open:
+
+```text
+http://localhost:5173/workspace
+```
+
+The backend health endpoint is:
+
+```text
+http://127.0.0.1:8000/health
+```
 
 Or:
 
@@ -163,394 +258,352 @@ Or:
 Invoke-RestMethod http://127.0.0.1:8000/health
 ```
 
-You should see `"ok": true`, `"embedding": "hash-ngram"`, and a non-zero `"chunks"` count. `"llm.available"` is `false` until Ollama is running.
-
-### STEP 4 — Start the frontend
-
-**Terminal 2** (project root, new VS Code terminal):
-
-```powershell
-npm install
-npm run dev
-```
-
-Open http://127.0.0.1:5173/workspace
-
-Workspace → Settings should read **Real local RAG (local)** and FastAPI reachable.
-
-Restart `npm run dev` whenever you change a `VITE_` variable.
-
 ---
 
-## Optional Ollama
+## Optional: Ollama local generation
 
-The app works without this. Enable it only if you want generated (not extractive) answers.
+Ollama is optional. Without it, NEXUS still returns **extractive answers based on retrieved evidence**.
 
-### 1. Install
-
-Download Windows Ollama from https://ollama.com/download and install it. The app usually stays running in the tray.
-
-### 2. Verify
+Install Ollama for Windows from the official installer, then check:
 
 ```powershell
 ollama --version
+ollama list
 Invoke-RestMethod http://127.0.0.1:11434/api/tags
 ```
 
-### 3. Pull the model this repo is configured for
+Pull a model that exists on your machine. For example:
 
 ```powershell
-ollama pull llama3.2
-ollama list
+ollama pull llama3.2:3b
 ```
 
-`llama3.2` is the default in `backend/.env.example` (`OLLAMA_MODEL=llama3.2`). It is a small local model (on the order of 2 GB download). A machine with **8 GB+ RAM** is a practical minimum; 16 GB is more comfortable. This environment did **not** run Ollama, so treat generation as “works if Ollama is healthy on your machine.”
+Then set the backend model in `backend\.env`:
 
-### 4. Point the backend at it
-
-`backend\.env` already has:
-
-```
+```text
 OLLAMA_BASE_URL=http://127.0.0.1:11434
-OLLAMA_MODEL=llama3.2
+OLLAMA_MODEL=llama3.2:3b
 ```
 
-Restart FastAPI if it was already running (Ctrl+C, then the uvicorn command again).
+Restart FastAPI after changing backend environment variables.
 
-### 5. Confirm health
+A direct Ollama smoke test is:
 
 ```powershell
-Invoke-RestMethod http://127.0.0.1:8000/health
+$body = @{
+    model = "llama3.2:3b"
+    system = "You are a simple test model. Reply only with the exact words requested by the user."
+    prompt = "Reply with exactly: NEXUS OLLAMA TEST"
+    stream = $false
+    keep_alive = 0
+} | ConvertTo-Json
+
+Invoke-RestMethod `
+    -Uri http://127.0.0.1:11434/api/generate `
+    -Method Post `
+    -ContentType "application/json" `
+    -Body $body
 ```
 
-`"llm.available"` should be `true`.
+For NEXUS itself, check `/health` and then ask a question in `/workspace`. In a successful local-generation response, the trace should report `llm: ollama` rather than `llm: extractive`.
 
-Compose / Docker do **not** start Ollama. On Windows, the host Ollama service is the intended path (`127.0.0.1:11434`).
+Ollama is **not a mandatory dependency** and is not started by the Docker compose setup.
 
 ---
 
-## Smoke tests
+## Recommended smoke tests
 
-### A. Local RAG without Ollama (extractive)
+### Retrieval
 
-1. FastAPI running on port 8000.
-2. `GET /health` returns `ok: true`.
-3. Frontend in local mode at `/workspace`.
-4. Search for: `FAISS shards live on local NVMe`  
-   Expect a hit on **Kubernetes Operations Guide**, page 41 (seeded corpus).
-5. Ask: `Where should FAISS shards live?`  
-   Expect an extractive answer that **says Ollama is not running**, plus citations.
-6. Click a citation → Evidence Inspector → open the document viewer.
-7. Upload a **text PDF** (not a screenshot scan). Wait until status is Ready. Confirm it appears under Documents.
-8. Search for a phrase you know is in that PDF.
-9. Stop FastAPI (Ctrl+C) and start it again. Search the same phrase. The index lives in `backend\data\` and should still hit.
+Ask:
 
-PowerShell equivalents (backend does not have to use the UI):
-
-```powershell
-Invoke-RestMethod http://127.0.0.1:8000/health
-
-Invoke-RestMethod -Method Post -Uri http://127.0.0.1:8000/api/search -ContentType 'application/json' -Body '{"query":"FAISS shards live on local NVMe","mode":"hybrid"}'
-
-Invoke-RestMethod -Method Post -Uri http://127.0.0.1:8000/api/chat -ContentType 'application/json' -Body '{"query":"Where should FAISS shards live?"}'
+```text
+Where should FAISS shards live?
 ```
 
-### B. Local RAG with Ollama
+The seeded corpus should surface the **Kubernetes Operations Guide** evidence around page 41.
 
-Same as A, but `/health` shows `"llm.available": true`. Ask `Where should FAISS shards live?` and expect a generated paragraph with `[n]` citations, not the extractive “Ollama is not running” preface.
+### Evidence trail
 
-### C. No-evidence refusal
+```text
+Answer
+→ click [1]
+→ Evidence Inspector
+→ Open document
+```
 
-Ask: `Who won the World Cup in 1950?`
+### No-evidence behavior
 
-Expect: *I couldn't find sufficient evidence in the indexed documents to answer this.* and no citations.
+Ask:
 
-### D. Demo fallback
+```text
+Who won the FIFA World Cup in 1950?
+```
 
-Stop FastAPI. Refresh the workspace. Local mode should fall back to the in-browser demo corpus so the UI stays usable.
+Because this is outside the seeded corpus, NEXUS should refuse to present an unsupported document-grounded answer and return no-evidence behavior.
+
+### Real upload
+
+Upload a text-based PDF and confirm:
+
+```text
+Upload
+→ Extract
+→ Chunk
+→ Embed
+→ Index
+→ Ready
+→ Search
+→ Ask
+→ Cite
+```
+
+The newly uploaded document should appear in the workspace and participate in retrieval.
+
+### Persistence
+
+Restart FastAPI and search for the same uploaded content again. The local index and metadata should reload from the backend data directory.
 
 ---
 
-## Environment variables
+## Embedding providers
 
-### Frontend (project root `.env`) — baked in at Vite startup
+NEXUS intentionally supports two local embedding paths.
 
-| Variable | Required | Default | Meaning |
-| --- | --- | --- | --- |
-| `VITE_API_MODE` | no | `demo` | `demo` or `local` |
-| `VITE_API_BASE_URL` | no | empty | FastAPI origin. Empty = Vite proxy / same origin |
-| `VITE_DEMO_MODE` | no | — | Compatibility only; prefer `VITE_API_MODE` |
-
-Do not put secrets in frontend env files. Anything `VITE_` is visible to the browser.
-
-### Backend (`backend/.env`) — loaded by python-dotenv
-
-| Variable | Required | Default | Meaning |
-| --- | --- | --- | --- |
-| `NEXUS_DATA_DIR` | no | `backend/data` | Index, uploads, JSON store |
-| `NEXUS_CORPUS_DIR` | no | `backend/corpus` | Seed markdown |
-| `NEXUS_EMBEDDING_PROVIDER` | no | `hash` | `hash` or `sbert` |
-| `NEXUS_EMBEDDING_MODEL` | no | `all-MiniLM-L6-v2` | Used only when provider is `sbert` |
-| `NEXUS_EMBEDDING_DIM` | no | `384` | Hashing dimension |
-| `NEXUS_MIN_EVIDENCE_SCORE` | no | `0.08` | Drop weak evidence |
-| `NEXUS_CORS_ORIGINS` | no | localhost 5173/8080 | Allow-list, not `*` |
-| `OLLAMA_BASE_URL` | no | `http://127.0.0.1:11434` | Optional |
-| `OLLAMA_MODEL` | no | `llama3.2` | Optional |
-
-PowerShell one-shot (usually unnecessary if `.env` exists):
-
-```powershell
-$env:NEXUS_EMBEDDING_PROVIDER = "hash"
-$env:OLLAMA_MODEL = "llama3.2"
-```
-
----
-
-## Embeddings (hash vs SBERT)
-
-| Provider | Env | What it is |
+| Provider | Configuration | Notes |
 | --- | --- | --- |
-| **HashingEmbedder** (default) | `NEXUS_EMBEDDING_PROVIDER=hash` | Lexical hashed unigram+bigram bag, 384-d, L2-normalized. **Not** a neural semantic model. Zero download. Used in tests. |
-| **SentenceTransformerEmbedder** | `NEXUS_EMBEDDING_PROVIDER=sbert` | Local `all-MiniLM-L6-v2`, 384-d. Requires `pip install sentence-transformers` and a model download (~80 MB). No paid API. |
+| `hash` | `NEXUS_EMBEDDING_PROVIDER=hash` | Lightweight hashed unigram/bigram vectors. No model download. **Lexical, not neural semantic embeddings.** |
+| `sbert` | `NEXUS_EMBEDDING_PROVIDER=sbert` | Sentence-Transformers with a MiniLM-style model such as `all-MiniLM-L6-v2`. Local and no paid API required. |
 
-Enable SBERT (optional, heavier):
+For SBERT:
 
 ```powershell
 Set-Location backend
-.\.venv\Scripts\Activate.ps1
+.\..\backend\.venv\Scripts\Activate.ps1
 python -m pip install "sentence-transformers>=3.0"
 ```
 
-In `backend\.env`:
+Then in `backend\.env`:
 
-```
+```text
 NEXUS_EMBEDDING_PROVIDER=sbert
 NEXUS_EMBEDDING_MODEL=all-MiniLM-L6-v2
 ```
 
-Restart FastAPI. Switching providers writes `embed_meta.json`. If name or dimension disagrees with the on-disk FAISS index, the index is **rebuilt** from stored chunks. Vectors from different models are not mixed.
+Changing embedding provider/model writes embedding metadata and prevents incompatible vectors from being silently mixed with an existing index.
 
-SBERT was **not** installed or benchmarked in the environment that produced this README. Do not read the eval table below as MiniLM scores.
-
-If `faiss-cpu` fails to install on your machine, the backend still runs: `VectorIndex` falls back to a NumPy inner-product index. Retrieval quality of that fallback matches FAISS IndexFlatIP on this tiny corpus; install FAISS when you can.
+The published evaluation below was run with the **hash-ngram** provider, not SBERT.
 
 ---
 
-## Evaluation
+## Retrieval evaluation
 
-These numbers are **local prototype measurements** on the bundled seed corpus. They are **not** production SLOs, not a leaderboard, and not neural-semantic quality.
+The repository includes a small local retrieval evaluation under `backend/eval/`.
 
-| Field | Value |
-| --- | --- |
-| When | 2026-09-06 |
-| n | 14 queries / 13 docs / 28 chunks |
-| Embeddings | hash-ngram, 384-d (**lexical**) |
-| Retrieval | hybrid 0.7 FAISS IP + 0.3 Jaccard, then lexical rerank |
+Latest measured run:
+
+| Metric | Value |
+| --- | ---: |
 | Recall@1 | **0.286** |
 | Recall@3 | **0.714** |
-| Recall@5 / HitRate@5 | **0.929** |
+| Recall@5 | **0.929** |
+| HitRate@5 | **0.929** |
 | MRR | **0.542** |
 
-Recall@1 is low because the gold set is mostly paraphrases and the default embedder is hashed n-grams. That is expected.
+Evaluation setup:
 
-Run it yourself (venv active, from `backend`):
+- 14 queries
+- 13 seeded documents
+- 28 chunks
+- hash-ngram 384-dimensional embeddings
+- hybrid retrieval
+- lexical reranking
+
+These numbers are **development measurements**, not production SLOs, not a benchmark leaderboard, and not evidence of general semantic-search quality. The evaluation intentionally contains paraphrased/conceptual queries so the lightweight default embedder's limitations are visible.
+
+Run locally:
 
 ```powershell
+Set-Location backend
+.\..\backend\.venv\Scripts\Activate.ps1
 python -m eval.run_eval
 python -m pytest
 ```
-
-Details: `backend/eval/README.md`.
-
----
-
-## Docker (optional)
-
-Docker is **not** required and was **not built** in the environment that packaged this repo (`docker` was not on `PATH`). Files are present for you to try:
-
-Frontend-only demo image:
-
-```powershell
-docker build -t nexus .
-docker run -p 8080:80 nexus
-```
-
-Frontend + FastAPI (**does not start Ollama**):
-
-```powershell
-docker compose up --build
-```
-
-Then open http://127.0.0.1:8080 — the compose file builds the frontend with `VITE_API_MODE=local` and empty `VITE_API_BASE_URL` (nginx proxies `/api` to the backend service).
 
 ---
 
 ## API
 
-- `GET /health`
-- `GET /api/documents` · `GET /api/documents/{id}` · `GET /api/documents/{id}/pages/{page}`
-- `POST /api/search` · `POST /api/chat` (alias `/api/ask`)
-- `POST /api/documents/upload` (alias `/api/upload`)
-- `GET/POST /api/collections` · `GET/POST /api/saved` · `GET/POST /api/history`
-- `GET /api/evidence/{id}`
+Key endpoints:
 
-Errors return `{ "error": "...", "code": "..." }` without stack traces or filesystem paths.
+```text
+GET  /health
+GET  /api/documents
+GET  /api/documents/{id}
+GET  /api/documents/{id}/pages/{page}
+POST /api/search
+POST /api/chat
+POST /api/documents/upload
+GET  /api/evidence/{id}
+GET  /api/collections
+POST /api/collections
+GET  /api/saved
+POST /api/saved
+GET  /api/history
+POST /api/history
+```
+
+The frontend talks to the backend through `src/services/api.ts`, keeping the UI decoupled from the backend implementation.
+
+Errors use structured JSON such as:
+
+```json
+{
+  "error": "...",
+  "code": "..."
+}
+```
+
+without exposing backend stack traces or filesystem paths.
 
 ---
 
-## Troubleshooting
+## Security posture
 
-**`py` / `python` not found**  
-Reinstall Python from python.org with **Add to PATH**, then reopen VS Code. Try `py -3 --version`, then `python --version`.
+NEXUS includes basic defensive measures appropriate for a local prototype:
 
-**`node` / `npm` not found**  
-Install Node.js LTS. Reopen VS Code. `node --version`.
+- upload size limits
+- extension/content validation
+- UUID-backed storage names
+- path-safety checks
+- configurable CORS allow-list
+- environment-based configuration
+- no secrets committed to source
+- citation-ID validation
+- untrusted-document delimiters for generation prompts
+- no-evidence refusal for weak retrieval
 
-**`Activate.ps1` cannot be loaded**  
-
-```powershell
-Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
-```
-
-**`pip install` fails on `faiss-cpu`**  
-You can still run the API: comment out `faiss-cpu==1.15.0` in `requirements.txt`, reinstall, and use the NumPy fallback. On Windows, also confirm you are on Python 3.11–3.13 (64-bit), not 32-bit.
-
-**`pip install` fails for another wheel**  
-Use 64-bit Python 3.12. Recreate the venv. Do not mix conda and this venv unless you know you want to.
-
-**`npm install` fails**  
-Delete `node_modules` if present, keep `package-lock.json`, run `npm install` again. Use Node 20+.
-
-**Port 8000 in use**  
-
-```powershell
-netstat -ano | findstr :8000
-```
-
-Either stop the other process or start uvicorn on `--port 8001` and set `VITE_API_BASE_URL=http://127.0.0.1:8001` in `.env` (restart Vite).
-
-**Port 5173 in use**  
-Vite will pick the next port. CORS defaults include 5173 only — if you land on 5174, add `http://localhost:5174` to `NEXUS_CORS_ORIGINS` or use the Vite proxy (empty `VITE_API_BASE_URL`) so the browser talks to 5174 and Vite forwards to 8000.
-
-**FastAPI unavailable / UI in demo**  
-Confirm uvicorn is running, `Invoke-RestMethod http://127.0.0.1:8000/health` works, root `.env` has `VITE_API_MODE=local`, and you restarted `npm run dev`.
-
-**Ollama unavailable**  
-Expected without the Ollama app. Answers stay extractive. Install Ollama, `ollama pull llama3.2`, confirm `http://127.0.0.1:11434/api/tags`, restart FastAPI.
-
-**Model not installed**  
-`ollama list` should show `llama3.2`. If you pull a different model, set `OLLAMA_MODEL` to that exact name.
-
-**PDF rejected**  
-Only `.pdf` / `.md` / `.txt`, max 15 MB, PDF must start with `%PDF`. Encrypted and image-only PDFs fail with a JSON `{error, code}`.
-
-**No search results / no-evidence answer**  
-The question may not overlap the indexed text (hashing is lexical). Try a phrase from the document. Confirm `/health` `chunks` > 0. After switching embedding providers, wait for rebuild.
-
-**CORS errors**  
-You opened the UI on an origin not in `NEXUS_CORS_ORIGINS`. Prefer empty `VITE_API_BASE_URL` + Vite proxy.
+These are **prototype mitigations**, not a claim of production-grade security or formal certification.
 
 ---
 
-## Publish to GitHub
+## Docker
 
-Do **not** commit `.env`, API keys, `backend/data/`, uploads, or generated FAISS files. `.gitignore` already excludes those.
+Docker is optional.
 
-Create an **empty** GitHub repository in the browser (no README). Then, from the project root in PowerShell:
+The repository contains frontend and backend Docker configuration plus `docker-compose.yml`.
+
+Try:
 
 ```powershell
-git status
+docker compose up --build
+```
+
+Ollama is intentionally not started by compose. The local Ollama service can run separately on the host.
+
+The repository version used for this portfolio project was packaged and verified without Docker image execution in the build environment, so Docker runtime compatibility should be validated on the target machine.
+
+---
+
+## Repository structure
+
+```text
+nexus/
+├── src/
+│   ├── components/
+│   ├── data/
+│   ├── hooks/
+│   ├── pages/
+│   ├── services/
+│   ├── types/
+│   └── workspace/
+├── backend/
+│   ├── app/
+│   │   ├── api/
+│   │   ├── citations/
+│   │   ├── embeddings/
+│   │   ├── generation/
+│   │   ├── ingestion/
+│   │   ├── models/
+│   │   ├── rag/
+│   │   ├── retrieval/
+│   │   └── storage/
+│   ├── corpus/
+│   ├── eval/
+│   ├── tests/
+│   └── requirements.txt
+├── docker-compose.yml
+├── Dockerfile
+├── package.json
+└── README.md
+```
+
+---
+
+## GitHub workflow
+
+This repository is source-first. Runtime state is intentionally ignored.
+
+Typical local publishing flow:
+
+```powershell
 git init
 git add .
-git status
 git commit -m "feat: build NEXUS AI document intelligence platform"
 git branch -M main
 git remote add origin <YOUR_GITHUB_REPO_URL>
-git remote -v
 git push -u origin main
-git log --oneline -5
 ```
 
-Replace `<YOUR_GITHUB_REPO_URL>` with your repo HTTPS or SSH URL, for example `https://github.com/your-user/your-repo.git`. This packager does not have access to your GitHub account and does **not** push for you.
+Never commit:
 
-If `git add .` stages a `.env` or `backend/data`, stop and fix `.gitignore` before committing.
+```text
+.env
+backend/.env
+backend/.venv/
+backend/data/
+node_modules/
+dist/
+FAISS runtime indexes
+uploaded runtime files
+```
 
 ---
 
-## Architecture
+## Design philosophy
 
-```mermaid
-flowchart LR
-  UI[React workspace] --> API[src/services/api.ts]
-  API -->|demo| Fuse[Fuse.js in-browser]
-  API -->|local| FastAPI
-  FastAPI --> Ingest[PDF / MD extract + chunk]
-  Ingest --> Emb[HashingEmbedder or optional SBERT]
-  Emb --> FAISS[FAISS IndexFlatIP]
-  FastAPI --> Retrieve[semantic / keyword / hybrid]
-  Retrieve --> Rerank[lexical rerank]
-  Rerank --> Gen[Ollama or extractive]
-  Gen --> Cite[citation-ID validation]
-  Cite --> UI
-```
+NEXUS is intentionally built at the intersection of **product design and systems engineering**.
 
-### Hybrid search (actual logic)
+The landing experience communicates the idea through motion and visual storytelling.
 
-- **Semantic:** query embedding → FAISS inner product (cosine).
-- **Keyword:** Jaccard overlap on 3+ character tokens. Dense scores are down-weighted.
-- **Hybrid:** `0.7 * dense + 0.3 * Jaccard`, then optional lexical rerank (`0.65 * score + 0.35 * Jaccard`).
+The workspace makes the idea usable.
 
-### Generation
+The backend makes the idea real.
 
-- Ollama if reachable.
-- Otherwise extractive reading of retrieved passages, labeled as such.
-- Retrieved text is wrapped as untrusted evidence. Invalid `[n]` marks are stripped.
-- Insufficient evidence → *I couldn't find sufficient evidence in the indexed documents to answer this.*
+The evidence layer makes the result inspectable.
 
-### Security limitations (honest)
-
-- Prompt-injection: evidence is delimited as untrusted. **Basic mitigation, not a guarantee.**
-- Citation-ID validation strips invented `[n]`. No claim-level NLI checker.
-- CORS is an allow-list, not `*`.
-- Do not expose this stack unauthenticated on the public internet.
-
-### Known limitations
-
-- Demo mode does not parse PDFs or call a model.
-- Default embeddings are lexical hashing unless SBERT is installed and selected.
-- Without Ollama, generation is extractive.
-- Eval is a 14-query gold set on 13 short docs.
-- Compare-policies cinematic view still uses the designed 2024/2025 script; local Ask uses the real index.
-
-### Project structure
-
-```
-src/services/api.ts      demo + local in one module
-backend/app/api          HTTP routes
-backend/app/ingestion    PDF/MD extract + chunking
-backend/app/embeddings   HashingEmbedder / SentenceTransformerEmbedder
-backend/app/retrieval    FAISS + rerank
-backend/app/rag          pipeline
-backend/app/generation   Ollama / extractive
-backend/app/citations    citation map + ID validation
-backend/app/storage      JSON metadata
-backend/eval             gold set + metrics
-backend/tests
-```
-
-### Tech stack
-
-React 19, TypeScript, Vite, Tailwind CSS v4, Framer Motion, Lenis, Fuse.js (demo only), Lucide.
-
-FastAPI, pypdf, NumPy, FAISS (CPU) with NumPy fallback, optional sentence-transformers, optional Ollama.
+The local-first approach keeps the core stack accessible without requiring a paid AI provider.
 
 ---
 
-## Scripts (frontend)
+## Inspiration
 
-```powershell
-npm run dev
-npm run build
-npm run preview
-npm run lint
-```
+The repository `mayooear/ai-pdf-chatbot-langchain` was used as **conceptual inspiration** for the broader PDF/RAG direction. It is not the source implementation of NEXUS.
+
+---
+
+## Status
+
+**Portfolio-ready local-first RAG prototype.**
+
+The project has been tested locally on Windows with:
+
+- React/Vite frontend
+- FastAPI backend
+- FAISS retrieval
+- real PDF ingestion
+- persisted retrieval state
+- Ollama `llama3.2:3b` generation
+- source citations
+
+Production-scale deployment, large-corpus evaluation, claim-level NLI verification, and distributed infrastructure are intentionally outside the scope of this project.
